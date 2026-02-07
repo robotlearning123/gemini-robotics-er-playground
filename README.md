@@ -4,6 +4,8 @@ A browser-based playground for testing **Google Gemini Robotics Embodied Reasoni
 
 **What makes this unique:** Instead of toy demos or static API calls, this puts Gemini's robotics model through an actual perception-to-manipulation pipeline — entirely in the browser, no robot hardware needed.
 
+![App Preview](docs/app-preview.png)
+
 ## Live Demo
 
 > **[Try it online](https://robotics-pick-and-place.vercel.app)** | **[Mirror](https://robotics-pick-and-place.pages.dev)** — Bring your own [Gemini API key](https://aistudio.google.com/apikey)
@@ -64,23 +66,17 @@ npm run dev
 
 Or just use the online demo — paste your API key in the sidebar and start testing.
 
-## Learning the Codebase
+## Learn the Codebase
 
-This project includes interactive guides you can open in the browser:
+Interactive guides (click to open):
 
-| Guide | URL | What You'll Learn |
-|-------|-----|-------------------|
-| **Architecture Diagram** | [`/diagram.html`](diagram.html) | System architecture, data flow, state machine, IK solver |
-| **Study Guide** | [`/study.html`](study.html) | Step-by-step walkthrough with code snippets and quizzes |
+[**Architecture Diagram**](https://robotics-pick-and-place.vercel.app/diagram.html) — System architecture, data flow, state machine, IK solver
 
-### Recommended Reading Order
+[![Architecture Diagram](docs/diagram-preview.png)](https://robotics-pick-and-place.vercel.app/diagram.html)
 
-1. **The AI Loop** — How Sense-Plan-Act connects everything (`App.tsx`)
-2. **Gemini Vision API** — How the model detects objects (`App.tsx:229-370`)
-3. **2D→3D Projection** — Raycasting from pixels to world coords (`RenderSystem.ts`)
-4. **Inverse Kinematics** — How joint angles are computed (`FrankaAnalyticalIK.ts`)
-5. **State Machine** — The 15-step pick-and-place sequence (`SequenceAnimator.ts`)
-6. **Physics Engine** — MuJoCo WASM simulation loop (`MujocoSim.ts`)
+[**Study Guide**](https://robotics-pick-and-place.vercel.app/study.html) — Step-by-step walkthrough with code snippets and quizzes
+
+[![Study Guide](docs/study-preview.png)](https://robotics-pick-and-place.vercel.app/study.html)
 
 ## Project Structure
 
