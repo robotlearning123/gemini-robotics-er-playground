@@ -1,5 +1,5 @@
 {
-  "name": "Robotics Pick and Place",
-  "description": "Simulated Franka Panda executing Pick and Place using Gemini Robotics ER.",
+  "name": "Gemini Robotics ER Playground",
+  "description": "Browser-based playground for testing Gemini Robotics ER with a simulated Franka Panda arm.",
   "requestFramePermissions": []
 }

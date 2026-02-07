@@ -1,14 +1,20 @@
 # Gemini Robotics ER Playground
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE) [![Live Demo](https://img.shields.io/badge/Live_Demo-Try_it-brightgreen)](https://robotics-pick-and-place.vercel.app) [![Gemini](https://img.shields.io/badge/Powered_by-Gemini_Robotics_ER-4285F4)](https://deepmind.google/technologies/gemini/robotics/)
+
 A browser-based playground for testing **Google Gemini Robotics Embodied Reasoning** — the AI model purpose-built for robotic manipulation. Run a full Sense-Plan-Act loop where Gemini ER analyzes a 3D scene and directs a 7-DOF Franka Panda arm to pick up objects, all in real-time physics simulation.
 
-**What makes this unique:** Instead of toy demos or static API calls, this puts Gemini's robotics model through an actual perception-to-manipulation pipeline — entirely in the browser, no robot hardware needed.
+Instead of toy demos or static API calls, this puts Gemini's robotics model through an actual **perception-to-manipulation pipeline** — entirely in the browser, no robot hardware needed.
 
-![App Preview](docs/app-preview.png)
+<p align="center">
+  <a href="https://robotics-pick-and-place.vercel.app">
+    <img src="docs/app-preview.png" alt="App Preview" width="720" />
+  </a>
+</p>
 
-## Live Demo
-
-> **[Try it online](https://robotics-pick-and-place.vercel.app)** | **[Mirror](https://robotics-pick-and-place.pages.dev)** — Bring your own [Gemini API key](https://aistudio.google.com/apikey)
+<p align="center">
+  <b><a href="https://robotics-pick-and-place.vercel.app">Try it online</a></b> · <b><a href="https://robotics-pick-and-place.pages.dev">Mirror</a></b> · Bring your own <a href="https://aistudio.google.com/apikey">Gemini API key</a>
+</p>
 
 ## How It Works
 
@@ -68,15 +74,12 @@ Or just use the online demo — paste your API key in the sidebar and start test
 
 ## Learn the Codebase
 
-Interactive guides (click to open):
+Interactive guides — click the previews to open:
 
-[**Architecture Diagram**](https://robotics-pick-and-place.vercel.app/diagram.html) — System architecture, data flow, state machine, IK solver
-
-[![Architecture Diagram](docs/diagram-preview.png)](https://robotics-pick-and-place.vercel.app/diagram.html)
-
-[**Study Guide**](https://robotics-pick-and-place.vercel.app/study.html) — Step-by-step walkthrough with code snippets and quizzes
-
-[![Study Guide](docs/study-preview.png)](https://robotics-pick-and-place.vercel.app/study.html)
+| [Architecture Diagram](https://robotics-pick-and-place.vercel.app/diagram.html) | [Study Guide](https://robotics-pick-and-place.vercel.app/study.html) |
+|:---:|:---:|
+| System architecture, data flow, IK solver | 9-chapter walkthrough with code & quizzes |
+| [![Architecture Diagram](docs/diagram-preview.png)](https://robotics-pick-and-place.vercel.app/diagram.html) | [![Study Guide](docs/study-preview.png)](https://robotics-pick-and-place.vercel.app/study.html) |
 
 ## Project Structure
 
@@ -107,6 +110,12 @@ Interactive guides (click to open):
 - **API keys are never committed.** `.env*` files are in `.gitignore`. Use `.env.example` as a template.
 - **Server proxy mode** keeps keys server-side with IP-based rate limiting (30 req/IP/hour).
 - **Client-side mode** stores the user's own key in `localStorage` only — never sent to our servers.
+
+## Acknowledgments
+
+- [MuJoCo](https://mujoco.org/) physics engine (DeepMind)
+- [Franka Emika Panda](https://github.com/google-deepmind/mujoco_menagerie/tree/main/franka_emika_panda) model from MuJoCo Menagerie
+- IK solver based on [He & Liu (2020)](https://doi.org/10.3390/math8101769)
 
 ## License
 
