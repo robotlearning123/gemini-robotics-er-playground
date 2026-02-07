@@ -1,8 +1,8 @@
-# Franka Panda Pick & Place with Gemini Robotics ER
+# Gemini Robotics ER Playground
 
-A hands-on testing ground for **Google Gemini Robotics Embodied Reasoning** — the AI model purpose-built for robotic manipulation. This project provides a real-time physics simulation where Gemini ER analyzes a 3D scene and directs a 7-DOF robot arm to pick up objects.
+A browser-based playground for testing **Google Gemini Robotics Embodied Reasoning** — the AI model purpose-built for robotic manipulation. Run a full Sense-Plan-Act loop where Gemini ER analyzes a 3D scene and directs a 7-DOF Franka Panda arm to pick up objects, all in real-time physics simulation.
 
-**What makes this unique:** Instead of toy demos or static API calls, this project puts Gemini's robotics model through an actual Sense-Plan-Act loop — from visual perception to physical manipulation — entirely in the browser.
+**What makes this unique:** Instead of toy demos or static API calls, this puts Gemini's robotics model through an actual perception-to-manipulation pipeline — entirely in the browser, no robot hardware needed.
 
 ## Live Demo
 
@@ -55,67 +55,14 @@ This project is designed as a practical testbed for Gemini's robotics capabiliti
 ## Quick Start
 
 ```bash
-git clone <repo-url> && cd robotics-pick-and-place
-bash setup.sh
-```
-
-The script installs dependencies, prompts for your [Gemini API key](https://aistudio.google.com/apikey), and starts the app.
-
-### Manual Setup
-
-```bash
+git clone https://github.com/robotlearning123/gemini-robotics-er-playground.git
+cd gemini-robotics-er-playground
 npm install
-cp .env.example .env.local
-# Edit .env.local and add your Gemini API key
+cp .env.example .env.local   # add your Gemini API key
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
-
-### API Key Options
-
-The app supports two modes for the Gemini API key:
-
-| Mode | How | Best For |
-|------|-----|----------|
-| **Client-side** | Paste your key in the sidebar input or set `GEMINI_API_KEY` in `.env.local` | Local development, personal use |
-| **Server proxy** | Deploy with `GEMINI_API_KEY` as a server env variable | Public demos (key never exposed to browser) |
-
-When deployed to Vercel or Cloudflare, the serverless proxy (`/api/detect`) keeps your key server-side with IP-based rate limiting (30 requests/IP/hour).
-
-## Deploy Your Own
-
-Both platforms include a serverless API proxy that keeps your Gemini key server-side.
-
-### Vercel
-
-```bash
-npm i -g vercel
-vercel                        # follow prompts
-vercel env add GEMINI_API_KEY # set your key
-vercel --prod                 # deploy to production
-```
-
-Or via the dashboard: Import repo > Settings > Environment Variables > add `GEMINI_API_KEY` > Deploy.
-
-### Cloudflare Pages
-
-```bash
-npm i -g wrangler
-npm run build
-wrangler pages project create robotics-pick-and-place
-wrangler pages secret put GEMINI_API_KEY    # enter your key
-wrangler pages deploy dist --branch main
-```
-
-### Static Hosting (No Server Proxy)
-
-For platforms without serverless functions (GitHub Pages, Netlify static, etc.), users must input their own API key in the sidebar. No server key is needed:
-
-```bash
-npm run build    # outputs to dist/
-# Upload dist/ to any static host
-```
+Or just use the online demo — paste your API key in the sidebar and start testing.
 
 ## Learning the Codebase
 
