@@ -34,27 +34,42 @@ User Prompt ─→ Canvas Snapshot ─→ Gemini API ─→ 2D→3D Projection �
 | **Segmentation Masks** | `mask: "base64..."` | Pixel-level object contours (ER 1.5 only) |
 | **Points** | `point: [y, x]` | Exact center coordinates |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18+)
-- A [Gemini API key](https://aistudio.google.com/apikey)
-
-### Setup
+## Quick Start
 
 ```bash
-# Install dependencies
+git clone <repo-url> && cd robotics-pick-and-place
+bash setup.sh
+```
+
+That's it. The script installs dependencies, prompts for your [Gemini API key](https://aistudio.google.com/apikey), and starts the app.
+
+### Manual Setup
+
+```bash
 npm install
-
-# Set your API key
 echo "GEMINI_API_KEY=your_key_here" > .env.local
-
-# Start the dev server
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+Open `http://localhost:3000` in your browser.
+
+## Learning the Codebase
+
+This project includes two interactive guides you can open in the browser:
+
+| Guide | URL | What You'll Learn |
+|-------|-----|-------------------|
+| **Study Guide** | [`/study.html`](study.html) | Step-by-step walkthrough with code snippets, quizzes, and exercises |
+| **Architecture Diagram** | [`/diagram.html`](diagram.html) | Visual system architecture, data flow, and file dependencies |
+
+### Recommended Reading Order
+
+1. **The AI Loop** — How Sense-Plan-Act connects everything (`App.tsx`)
+2. **Gemini Vision API** — How the model detects objects (`App.tsx:229-370`)
+3. **2D→3D Projection** — Raycasting from pixels to world coords (`RenderSystem.ts`)
+4. **Inverse Kinematics** — How joint angles are computed (`FrankaAnalyticalIK.ts`)
+5. **State Machine** — The 7-phase pick-and-place sequence (`SequenceAnimator.ts`)
+6. **Physics Engine** — MuJoCo WASM simulation loop (`MujocoSim.ts`)
 
 ## Project Structure
 
