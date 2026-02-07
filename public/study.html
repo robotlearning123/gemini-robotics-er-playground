@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Study Guide — Franka Pick & Place</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: #0a0e1a; color: #cbd5e1; line-height: 1.7; }
+  a { color: #818cf8; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Layout */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: #0f172a;
+    border-right: 1px solid #1e293b; padding: 24px 16px; overflow-y: auto; z-index: 10;
+  }
+  .sidebar h2 { font-size: 14px; color: #f8fafc; margin-bottom: 4px; }
+  .sidebar .sub { font-size: 11px; color: #64748b; margin-bottom: 20px; }
+  .nav-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #475569; margin: 16px 0 8px; }
+  .nav-link {
+    display: block; padding: 6px 10px; border-radius: 6px; font-size: 13px; color: #94a3b8;
+    margin-bottom: 2px; transition: all 0.15s;
+  }
+  .nav-link:hover { background: #1e293b; color: #e2e8f0; text-decoration: none; }
+  .nav-link.active { background: #312e81; color: #a5b4fc; }
+  .nav-link .num { color: #6366f1; font-weight: 700; margin-right: 6px; font-size: 11px; }
+
+  .main { margin-left: 260px; max-width: 860px; padding: 40px 48px 80px; }
+
+  /* Typography */
+  h1 { font-size: 28px; color: #f8fafc; margin-bottom: 8px; }
+  .hero-sub { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 22px; color: #f1f5f9; margin: 48px 0 16px; padding-top: 24px; border-top: 1px solid #1e293b; }
+  h2:first-of-type { border: none; margin-top: 0; }
+  h3 { font-size: 16px; color: #e2e8f0; margin: 24px 0 12px; }
+  p { margin-bottom: 14px; }
+
+  /* Code blocks */
+  pre {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
+    padding: 16px 20px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px;
+    line-height: 1.6; overflow-x: auto; margin: 12px 0 20px; color: #94a3b8;
+  }
+  pre .comment { color: #475569; }
+  pre .keyword { color: #c084fc; }
+  pre .string { color: #34d399; }
+  pre .func { color: #60a5fa; }
+  pre .type { color: #f59e0b; }
+  pre .num { color: #fb923c; }
+  pre .highlight { background: #1e1b4b; display: inline; padding: 1px 4px; border-radius: 3px; }
+  code {
+    background: #1e293b; padding: 2px 7px; border-radius: 4px; font-size: 12px;
+    font-family: 'SF Mono', monospace; color: #22d3ee;
+  }
+
+  /* Callouts */
+  .callout {
+    border-radius: 10px; padding: 16px 20px; margin: 16px 0 20px; font-size: 13px;
+    border-left: 4px solid;
+  }
+  .callout.concept { background: #1e1b4b; border-color: #6366f1; }
+  .callout.concept .label { color: #a5b4fc; font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+  .callout.tip { background: #042f2e; border-color: #14b8a6; }
+  .callout.tip .label { color: #5eead4; font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+  .callout.warn { background: #451a03; border-color: #f59e0b; }
+  .callout.warn .label { color: #fcd34d; font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+  .callout.exercise { background: #0c4a6e; border-color: #0ea5e9; }
+  .callout.exercise .label { color: #7dd3fc; font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+
+  /* Learning path */
+  .path { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; }
+  .path-step {
+    display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start;
+    background: #1e293b; border-radius: 10px; padding: 14px 16px; border: 1px solid #334155;
+  }
+  .path-step .step-num {
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; font-weight: 800; color: white; background: #6366f1;
+  }
+  .path-step .step-title { font-weight: 700; color: #f1f5f9; font-size: 14px; }
+  .path-step .step-desc { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .path-step .step-files { margin-top: 6px; }
+  .file-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
+    font-family: 'SF Mono', monospace; background: #0f172a; color: #6366f1; margin: 2px 2px 0 0;
+    border: 1px solid #1e293b;
+  }
+
+  /* Diagrams */
+  .mini-diagram {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 10px;
+    padding: 20px; margin: 16px 0; font-family: 'SF Mono', monospace; font-size: 13px;
+    color: #64748b; line-height: 1.8; text-align: center; white-space: pre;
+  }
+  .mini-diagram .hl { color: #a5b4fc; font-weight: 700; }
+  .mini-diagram .hl2 { color: #34d399; font-weight: 700; }
+  .mini-diagram .hl3 { color: #f59e0b; font-weight: 700; }
+  .mini-diagram .arrow { color: #475569; }
+
+  /* Quiz */
+  .quiz {
+    background: #1e293b; border-radius: 10px; padding: 20px; margin: 16px 0;
+    border: 1px solid #334155;
+  }
+  .quiz .q { font-weight: 700; color: #e2e8f0; margin-bottom: 10px; font-size: 14px; }
+  .quiz details { margin-top: 8px; }
+  .quiz summary {
+    cursor: pointer; color: #818cf8; font-size: 13px; font-weight: 600;
+    padding: 6px 0; user-select: none;
+  }
+  .quiz .answer {
+    padding: 12px 16px; margin-top: 8px; background: #0f172a; border-radius: 8px;
+    font-size: 13px; color: #94a3b8; border: 1px solid #1e293b;
+  }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; }
+  th { text-align: left; font-size: 12px; color: #64748b; font-weight: 600; padding: 8px 12px; border-bottom: 1px solid #1e293b; }
+  td { font-size: 13px; padding: 8px 12px; border-bottom: 1px solid #0f172a; }
+  td code { font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<div class="sidebar">
+  <h2>Study Guide</h2>
+  <div class="sub">Franka Pick & Place</div>
+
+  <div class="nav-section">Getting Started</div>
+  <a class="nav-link" href="#overview"><span class="num">0</span> Overview</a>
+  <a class="nav-link" href="#path"><span class="num">0.1</span> Learning Path</a>
+
+  <div class="nav-section">Core Concepts</div>
+  <a class="nav-link" href="#ch1"><span class="num">1</span> The AI Loop</a>
+  <a class="nav-link" href="#ch2"><span class="num">2</span> Gemini Vision API</a>
+  <a class="nav-link" href="#ch3"><span class="num">3</span> 2D to 3D Projection</a>
+  <a class="nav-link" href="#ch4"><span class="num">4</span> Inverse Kinematics</a>
+  <a class="nav-link" href="#ch5"><span class="num">5</span> State Machine</a>
+  <a class="nav-link" href="#ch6"><span class="num">6</span> MuJoCo Physics</a>
+  <a class="nav-link" href="#ch7"><span class="num">7</span> Three.js Rendering</a>
+
+  <div class="nav-section">Practice</div>
+  <a class="nav-link" href="#exercises"><span class="num">8</span> Exercises</a>
+  <a class="nav-link" href="#resources"><span class="num">9</span> Resources</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+<h1 id="overview">Study Guide</h1>
+<p class="hero-sub">Learn robotics, computer vision, and physics simulation by reading real code.</p>
+
+<p>This guide walks you through the entire codebase step by step. Each chapter explains one core concept with the actual source code, diagrams, and self-check quizzes.</p>
+
+<div class="callout tip">
+  <div class="label">How to use this guide</div>
+  Open the source files side-by-side as you read. Each section references specific files and line numbers. Try the exercises at the end to test your understanding.
+</div>
+
+<!-- Learning Path -->
+<h2 id="path">Learning Path</h2>
+<p>Follow this order for the best learning experience:</p>
+
+<div class="path">
+  <div class="path-step">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title">Understand the Big Picture</div>
+      <div class="step-desc">Read how the Sense-Plan-Act loop connects all the pieces. Start here.</div>
+      <div class="step-files"><span class="file-tag">App.tsx</span> <span class="file-tag">types.ts</span></div>
+    </div>
+  </div>
+  <div class="path-step">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title">Explore the Vision API</div>
+      <div class="step-desc">See how Gemini analyzes a 2D image and returns object coordinates.</div>
+      <div class="step-files"><span class="file-tag">App.tsx:229-370</span></div>
+    </div>
+  </div>
+  <div class="path-step">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title">Study 2D→3D Projection</div>
+      <div class="step-desc">Learn raycasting — converting screen pixels to 3D world coordinates.</div>
+      <div class="step-files"><span class="file-tag">RenderSystem.ts</span></div>
+    </div>
+  </div>
+  <div class="path-step">
+    <div class="step-num">4</div>
+    <div>
+      <div class="step-title">Dive into Inverse Kinematics</div>
+      <div class="step-desc">Understand how the robot calculates joint angles to reach a target.</div>
+      <div class="step-files"><span class="file-tag">FrankaAnalyticalIK.ts</span> <span class="file-tag">IkSystem.ts</span></div>
+    </div>
+  </div>
+  <div class="path-step">
+    <div class="step-num">5</div>
+    <div>
+      <div class="step-title">Follow the State Machine</div>
+      <div class="step-desc">Trace how the robot moves through each pick-and-place phase.</div>
+      <div class="step-files"><span class="file-tag">SequenceAnimator.ts</span></div>
+    </div>
+  </div>
+  <div class="path-step">
+    <div class="step-num">6</div>
+    <div>
+      <div class="step-title">Understand the Physics</div>
+      <div class="step-desc">See how MuJoCo simulates gravity, collisions, and joint dynamics.</div>
+      <div class="step-files"><span class="file-tag">MujocoSim.ts</span> <span class="file-tag">RobotLoader.ts</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chapter 1: The AI Loop -->
+<h2 id="ch1">1. The AI Loop (Sense-Plan-Act)</h2>
+
+<p>The entire application revolves around a classic robotics pattern called <strong>Sense-Plan-Act</strong>. Everything starts in <code>App.tsx</code>.</p>
+
+<div class="mini-diagram"><span class="hl">SENSE</span> <span class="arrow">────→</span> <span class="hl2">PLAN</span> <span class="arrow">────→</span> <span class="hl3">ACT</span> <span class="arrow">────→</span> <span class="hl">SENSE</span> ...
+ capture       Gemini        IK solve       repeat for
+ screenshot    inference     + execute      next object</div>
+
+<p>The loop in code:</p>
+
+<pre><span class="comment">// App.tsx — The main loop, simplified</span>
+
+<span class="comment">// SENSE: Capture what the robot sees</span>
+<span class="keyword">const</span> snapshot = sim.renderSys.<span class="func">getCanvasSnapshot</span>();
+
+<span class="comment">// PLAN: Ask Gemini "what should I pick up?"</span>
+<span class="keyword">const</span> response = <span class="keyword">await</span> ai.models.<span class="func">generateContent</span>({
+  model: <span class="string">"gemini-robotics-er-1.5-preview"</span>,
+  contents: [{ parts: [
+    { text: prompt },
+    { inlineData: { mimeType: <span class="string">"image/jpeg"</span>, data: snapshot } }
+  ]}]
+});
+
+<span class="comment">// Parse 2D detections → project to 3D</span>
+<span class="keyword">const</span> items = <span class="func">JSON.parse</span>(responseText);
+<span class="keyword">const</span> targets3D = items.<span class="func">map</span>(item =>
+  renderSys.<span class="func">project2DTo3D</span>(item.box_2d)
+);
+
+<span class="comment">// ACT: Command the robot to pick up each target</span>
+sim.<span class="func">pickupItems</span>(targets3D);</pre>
+
+<div class="callout concept">
+  <div class="label">Key Concept: Sense-Plan-Act</div>
+  This is the most common control architecture in robotics. The robot <em>senses</em> its environment, <em>plans</em> what to do (here via AI), then <em>acts</em> on that plan. The cycle repeats for each object.
+</div>
+
+<div class="quiz">
+  <div class="q">Self-Check: Why does the system capture a 2D screenshot instead of sending 3D data directly to Gemini?</div>
+  <details>
+    <summary>Show Answer</summary>
+    <div class="answer">Gemini is a <strong>vision language model</strong> — it understands 2D images, not 3D scene data. The screenshot simulates what a real robot camera would see. The system then bridges the gap by projecting Gemini's 2D output back into 3D using raycasting.</div>
+  </details>
+</div>
+
+<!-- Chapter 2: Gemini Vision API -->
+<h2 id="ch2">2. Gemini Vision API</h2>
+
+<p>The app sends an image + text prompt to Gemini and receives structured detection results. Look at <code>App.tsx:229-370</code>.</p>
+
+<h3>Building the Prompt</h3>
+
+<p>Different detection modes use different prompt templates:</p>
+
+<pre><span class="comment">// Prompt construction for each mode</span>
+<span class="keyword">const</span> promptTemplates = {
+  <span class="string">"2D bounding boxes"</span>: <span class="string">`Return bounding boxes as JSON:
+    [{"box_2d": [y1,x1,y2,x2], "label": "..."}]`</span>,
+
+  <span class="string">"Points"</span>: <span class="string">`Return points as JSON:
+    [{"point": [y, x], "label": "..."}]`</span>,
+
+  <span class="string">"Segmentation masks"</span>: <span class="string">`Return masks as JSON:
+    [{"box_2d": [...], "mask": "...", "label": "..."}]`</span>
+};</pre>
+
+<h3>API Call Structure</h3>
+
+<pre><span class="keyword">const</span> ai = <span class="keyword">new</span> <span class="type">GoogleGenAI</span>({ apiKey: process.env.API_KEY });
+
+<span class="keyword">const</span> response = <span class="keyword">await</span> ai.models.<span class="func">generateContent</span>({
+  model: <span class="string">"gemini-robotics-er-1.5-preview"</span>,
+  contents: [{
+    role: <span class="string">"user"</span>,
+    parts: [
+      { text: fullPrompt },                    <span class="comment">// "find red cubes, return JSON..."</span>
+      { inlineData: {
+          mimeType: <span class="string">"image/jpeg"</span>,
+          data: base64Screenshot              <span class="comment">// the canvas snapshot</span>
+      }}
+    ]
+  }],
+  config: {
+    temperature: <span class="num">0.1</span>,                      <span class="comment">// low = deterministic</span>
+    thinkingConfig: { thinkingBudget: <span class="num">1024</span> } <span class="comment">// enable chain-of-thought</span>
+  }
+});</pre>
+
+<div class="callout concept">
+  <div class="label">Key Concept: Multimodal AI</div>
+  The Gemini API accepts both text and images in a single request. This "multimodal" capability is what makes the embodied reasoning loop possible — the model can <em>see</em> the scene and <em>reason</em> about spatial relationships.
+</div>
+
+<h3>Response Format</h3>
+
+<table>
+  <tr><th>Mode</th><th>Response Example</th><th>What It Means</th></tr>
+  <tr>
+    <td>Boxes</td>
+    <td><code>{"box_2d": [120, 340, 180, 400]}</code></td>
+    <td>Rectangle from (340,120) to (400,180) in image pixels</td>
+  </tr>
+  <tr>
+    <td>Points</td>
+    <td><code>{"point": [150, 370]}</code></td>
+    <td>Object center at pixel (370, 150)</td>
+  </tr>
+  <tr>
+    <td>Masks</td>
+    <td><code>{"mask": "iVBORw0K..."}</code></td>
+    <td>Base64-encoded binary mask of object pixels</td>
+  </tr>
+</table>
+
+<div class="quiz">
+  <div class="q">Self-Check: Why is temperature set to 0.1 instead of 1.0?</div>
+  <details>
+    <summary>Show Answer</summary>
+    <div class="answer">Low temperature makes the model more <strong>deterministic</strong> — it produces consistent, precise coordinates. High temperature would add randomness, causing the bounding boxes to vary between runs. For spatial reasoning tasks, precision matters more than creativity.</div>
+  </details>
+</div>
+
+<!-- Chapter 3: 2D→3D Projection -->
+<h2 id="ch3">3. 2D to 3D Projection</h2>
+
+<p>Gemini returns 2D pixel coordinates. But the robot lives in 3D space. How do we bridge this gap? Look at <code>RenderSystem.ts</code>.</p>
+
+<div class="mini-diagram">  <span class="hl">2D Image Pixel (340, 150)</span>
+          │
+          ▼
+  <span class="hl2">Camera Ray</span>  (cast through pixel into scene)
+          │
+          ▼
+  <span class="hl3">3D Intersection</span>  (x: 0.3, y: 0.05, z: -0.2)
+          │
+          ▼
+  Robot target position in world coordinates</div>
+
+<h3>Raycasting</h3>
+
+<pre><span class="comment">// RenderSystem.ts — project2DTo3D (simplified)</span>
+
+<span class="func">project2DTo3D</span>(imageX: <span class="type">number</span>, imageY: <span class="type">number</span>): <span class="type">THREE.Vector3</span> {
+  <span class="comment">// 1. Convert pixel coords to normalized device coords (-1 to +1)</span>
+  <span class="keyword">const</span> ndc = <span class="keyword">new</span> <span class="type">THREE.Vector2</span>(
+    (imageX / canvasWidth) * <span class="num">2</span> - <span class="num">1</span>,       <span class="comment">// x: -1 (left) to +1 (right)</span>
+    -(imageY / canvasHeight) * <span class="num">2</span> + <span class="num">1</span>      <span class="comment">// y: +1 (top) to -1 (bottom)</span>
+  );
+
+  <span class="comment">// 2. Create a ray from camera through this point</span>
+  <span class="keyword">const</span> raycaster = <span class="keyword">new</span> <span class="type">THREE.Raycaster</span>();
+  raycaster.<span class="func">setFromCamera</span>(ndc, <span class="keyword">this</span>.camera);
+
+  <span class="comment">// 3. Find where the ray hits scene objects</span>
+  <span class="keyword">const</span> hits = raycaster.<span class="func">intersectObjects</span>(scene.children);
+
+  <span class="comment">// 4. Return the 3D world position of the first hit</span>
+  <span class="keyword">return</span> hits[<span class="num">0</span>].point;  <span class="comment">// THREE.Vector3(x, y, z)</span>
+}</pre>
+
+<div class="callout concept">
+  <div class="label">Key Concept: Raycasting</div>
+  Raycasting is like pointing a laser from the camera through a specific pixel. Where the laser hits an object in the 3D scene, that's the 3D coordinate. Three.js provides this via <code>THREE.Raycaster</code>. This is the same technique used in video games for mouse picking.
+</div>
+
+<div class="quiz">
+  <div class="q">Self-Check: What happens if the ray doesn't hit any object?</div>
+  <details>
+    <summary>Show Answer</summary>
+    <div class="answer">The intersection array would be empty. In practice, the ray almost always hits the <strong>table/floor plane</strong>, which acts as a fallback. The code checks for valid intersections before proceeding with the pickup sequence.</div>
+  </details>
+</div>
+
+<!-- Chapter 4: Inverse Kinematics -->
+<h2 id="ch4">4. Inverse Kinematics (IK)</h2>
+
+<p>Given a target 3D position, how does the robot figure out what angle each joint should be? This is the <strong>Inverse Kinematics</strong> problem. See <code>FrankaAnalyticalIK.ts</code>.</p>
+
+<h3>Forward vs Inverse</h3>
+
+<div class="mini-diagram"><span class="hl">Forward Kinematics</span> (easy)
+  Joint angles [q1, q2, ..., q7] <span class="arrow">──→</span> End-effector position (x, y, z)
+
+<span class="hl2">Inverse Kinematics</span> (hard)
+  End-effector position (x, y, z) <span class="arrow">──→</span> Joint angles [q1, q2, ..., q7]</div>
+
+<h3>Why 7-DOF Matters</h3>
+
+<p>A 6-DOF arm has exactly one solution (or none) for a given pose. The Franka Panda's 7th joint creates <strong>redundancy</strong> — multiple valid solutions exist. The solver picks the one closest to the current arm configuration to ensure smooth motion.</p>
+
+<pre><span class="comment">// FrankaAnalyticalIK.ts — Analytical solver (simplified concept)</span>
+
+<span class="func">solve</span>(targetPos: <span class="type">Vec3</span>, targetRot: <span class="type">Mat3</span>, currentQ: <span class="type">number[]</span>): <span class="type">number[]</span> {
+  <span class="comment">// 1. Compute wrist position from target pose</span>
+  <span class="keyword">const</span> wristPos = targetPos - targetRot * gripperOffset;
+
+  <span class="comment">// 2. Solve for shoulder and elbow joints (geometric)</span>
+  <span class="keyword">const</span> q1 = <span class="func">atan2</span>(wristPos.y, wristPos.x);
+  <span class="keyword">const</span> q4 = <span class="func">acos</span>((d1² + d2² - r²) / (<span class="num">2</span> * d1 * d2));
+
+  <span class="comment">// 3. Solve remaining joints using DH parameters</span>
+  <span class="comment">// ... (closed-form geometric equations)</span>
+
+  <span class="comment">// 4. Pick solution closest to current configuration</span>
+  <span class="keyword">return</span> <span class="func">closestSolution</span>(allSolutions, currentQ);
+}</pre>
+
+<div class="callout concept">
+  <div class="label">Key Concept: Analytical vs Numerical IK</div>
+  <strong>Analytical (this project):</strong> Derives joint angles from geometric equations. Fast and exact, but only works for specific robot geometries.<br><br>
+  <strong>Numerical (e.g. Jacobian):</strong> Iteratively adjusts joints to minimize error. Works for any robot but slower and may get stuck in local minima.
+</div>
+
+<div class="quiz">
+  <div class="q">Self-Check: Why not just use a numerical IK solver?</div>
+  <details>
+    <summary>Show Answer</summary>
+    <div class="answer">The simulation runs at 60 FPS and needs joint angles computed every frame during motion. An analytical solver gives exact results in microseconds, while iterative solvers may need 10-100 iterations per frame. For real-time control, speed is critical.</div>
+  </details>
+</div>
+
+<!-- Chapter 5: State Machine -->
+<h2 id="ch5">5. Pick-and-Place State Machine</h2>
+
+<p>Once we have target positions and IK solutions, how does the robot actually move? A <strong>finite state machine</strong> sequences the motions. See <code>SequenceAnimator.ts</code>.</p>
+
+<div class="mini-diagram">┌──────┐   ┌──────┐   ┌───────┐   ┌───────┐   ┌──────┐   ┌──────┐   ┌──────┐
+│<span class="hl"> HOVER</span>│──→│<span class="hl2"> OPEN </span>│──→│<span class="hl3">LOWER </span>│──→│<span class="hl2">GRASP </span>│──→│<span class="hl"> LIFT </span>│──→│<span class="hl3"> MOVE </span>│──→│<span class="hl2"> DROP </span>│
+└──────┘   └──────┘   └───────┘   └───────┘   └──────┘   └──────┘   └──────┘
+ Move arm    Open       Descend     Close       Lift up    Move to    Open
+ above       gripper    to object   gripper     with       drop-off   gripper
+ target      fingers    height      firmly      object     tray       to release</div>
+
+<h3>State Transitions</h3>
+
+<pre><span class="comment">// SequenceAnimator.ts — State machine (simplified)</span>
+
+<span class="keyword">enum</span> <span class="type">Phase</span> { Hover, Open, Lower, Grasp, Lift, Move, Drop, Done }
+
+<span class="func">update</span>(dt: <span class="type">number</span>) {
+  <span class="keyword">switch</span> (<span class="keyword">this</span>.phase) {
+    <span class="keyword">case</span> <span class="type">Phase</span>.Hover:
+      <span class="comment">// Interpolate joints toward "above target" pose</span>
+      <span class="keyword">if</span> (<span class="func">reachedTarget</span>()) <span class="keyword">this</span>.phase = <span class="type">Phase</span>.Open;
+      <span class="keyword">break</span>;
+
+    <span class="keyword">case</span> <span class="type">Phase</span>.Open:
+      <span class="comment">// Open gripper fingers</span>
+      gripperCtrl = GRIPPER_OPEN;
+      <span class="keyword">if</span> (elapsed > <span class="num">0.3</span>) <span class="keyword">this</span>.phase = <span class="type">Phase</span>.Lower;
+      <span class="keyword">break</span>;
+
+    <span class="keyword">case</span> <span class="type">Phase</span>.Lower:
+      <span class="comment">// Move end-effector down to object height</span>
+      <span class="keyword">if</span> (<span class="func">reachedTarget</span>()) <span class="keyword">this</span>.phase = <span class="type">Phase</span>.Grasp;
+      <span class="keyword">break</span>;
+
+    <span class="comment">// ... Grasp, Lift, Move, Drop follow same pattern</span>
+  }
+}</pre>
+
+<div class="callout concept">
+  <div class="label">Key Concept: Joint Interpolation</div>
+  The robot doesn't teleport between poses. During each phase, joint angles are <strong>linearly interpolated</strong> (lerped) from current to target values over time. This creates smooth, natural-looking motion:<br><br>
+  <code>q(t) = q_start + (q_target - q_start) * t/duration</code>
+</div>
+
+<!-- Chapter 6: MuJoCo Physics -->
+<h2 id="ch6">6. MuJoCo Physics Engine</h2>
+
+<p>MuJoCo (Multi-Joint dynamics with Contact) is the physics engine running in your browser via WebAssembly. See <code>MujocoSim.ts</code>.</p>
+
+<h3>Simulation Loop</h3>
+
+<pre><span class="comment">// MujocoSim.ts — Main simulation loop (simplified)</span>
+
+<span class="func">startLoop</span>() {
+  <span class="keyword">const</span> <span class="func">step</span> = () => {
+    <span class="comment">// 1. Apply joint commands (from IK / state machine)</span>
+    <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="num">0</span>; i &lt; numActuators; i++) {
+      mjData.ctrl[i] = targetAngles[i];
+    }
+
+    <span class="comment">// 2. Step physics forward (gravity, contacts, dynamics)</span>
+    mujoco.<span class="func">mj_step</span>(mjModel, mjData);
+
+    <span class="comment">// 3. Read new positions from physics state</span>
+    <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="num">0</span>; i &lt; numBodies; i++) {
+      <span class="keyword">const</span> pos = mjData.xpos.subarray(i*<span class="num">3</span>, i*<span class="num">3</span>+<span class="num">3</span>);
+      <span class="keyword">const</span> quat = mjData.xquat.subarray(i*<span class="num">4</span>, i*<span class="num">4</span>+<span class="num">4</span>);
+
+      <span class="comment">// 4. Update Three.js meshes to match physics</span>
+      threeMesh.position.<span class="func">set</span>(pos[<span class="num">0</span>], pos[<span class="num">2</span>], -pos[<span class="num">1</span>]);
+      threeMesh.quaternion.<span class="func">set</span>(...quat);
+    }
+
+    <span class="func">requestAnimationFrame</span>(step);
+  };
+  step();
+}</pre>
+
+<div class="callout warn">
+  <div class="label">Coordinate System Mismatch</div>
+  MuJoCo uses Z-up coordinates, but Three.js uses Y-up. The sync code swaps axes: <code>three.y = mujoco.z</code> and <code>three.z = -mujoco.y</code>. This is a common source of bugs in robotics visualization.
+</div>
+
+<!-- Chapter 7: Three.js Rendering -->
+<h2 id="ch7">7. Three.js Rendering</h2>
+
+<p>The visual layer converts MuJoCo's abstract collision shapes into visible 3D meshes. See <code>RenderSystem.ts</code> and <code>GeomBuilder.ts</code>.</p>
+
+<h3>Geometry Conversion</h3>
+
+<table>
+  <tr><th>MuJoCo Shape</th><th>Three.js Geometry</th><th>Used For</th></tr>
+  <tr><td>Box</td><td><code>BoxGeometry</code></td><td>Cubes on the table</td></tr>
+  <tr><td>Sphere</td><td><code>SphereGeometry</code></td><td>Joint visualizations</td></tr>
+  <tr><td>Capsule</td><td><code>CapsuleGeometry</code> (custom)</td><td>Robot links</td></tr>
+  <tr><td>Mesh</td><td><code>BufferGeometry</code> from OBJ</td><td>Detailed robot parts</td></tr>
+</table>
+
+<h3>Scene Setup</h3>
+
+<pre><span class="comment">// RenderSystem.ts — Scene creation (simplified)</span>
+
+<span class="comment">// Renderer with shadows</span>
+<span class="keyword">this</span>.renderer = <span class="keyword">new</span> <span class="type">THREE.WebGLRenderer</span>({ antialias: <span class="keyword">true</span> });
+renderer.shadowMap.enabled = <span class="keyword">true</span>;
+
+<span class="comment">// Perspective camera (simulates real robot camera)</span>
+<span class="keyword">this</span>.camera = <span class="keyword">new</span> <span class="type">THREE.PerspectiveCamera</span>(<span class="num">45</span>, aspect, <span class="num">0.01</span>, <span class="num">100</span>);
+
+<span class="comment">// Directional light for shadows</span>
+<span class="keyword">const</span> dirLight = <span class="keyword">new</span> <span class="type">THREE.DirectionalLight</span>(<span class="num">0xffffff</span>, <span class="num">2</span>);
+dirLight.castShadow = <span class="keyword">true</span>;
+
+<span class="comment">// Reflective floor (custom Reflector.ts)</span>
+<span class="keyword">const</span> floor = <span class="keyword">new</span> <span class="type">Reflector</span>(geometry, {
+  color: <span class="num">0x888888</span>,
+  textureWidth: <span class="num">1024</span>,
+  textureHeight: <span class="num">1024</span>
+});</pre>
+
+<!-- Chapter 8: Exercises -->
+<h2 id="exercises">8. Exercises</h2>
+
+<div class="callout exercise">
+  <div class="label">Exercise 1: Change the drop location</div>
+  Find where the tray position is defined in <code>SequenceAnimator.ts</code> and move it to a different location. What happens to the robot's motion?
+</div>
+
+<div class="callout exercise">
+  <div class="label">Exercise 2: Add a new detection prompt</div>
+  Modify <code>UnifiedSidebar.tsx</code> to add a preset button for "yellow cubes". Test it with the BOXES detection mode.
+</div>
+
+<div class="callout exercise">
+  <div class="label">Exercise 3: Adjust gripper timing</div>
+  In <code>SequenceAnimator.ts</code>, find the duration for the GRASP phase. Make the robot hold the gripper closed for longer before lifting. Does it improve pick reliability?
+</div>
+
+<div class="callout exercise">
+  <div class="label">Exercise 4: Visualize the ray</div>
+  In <code>RenderSystem.ts</code>, after raycasting, add a <code>THREE.ArrowHelper</code> to visualize the ray direction. This helps debug projection issues.
+</div>
+
+<div class="callout exercise">
+  <div class="label">Exercise 5: Try a different model</div>
+  Switch to <code>gemini-3-flash-preview</code> in the UI. Compare detection accuracy with <code>gemini-robotics-er-1.5-preview</code>. Which is faster? Which is more accurate?
+</div>
+
+<!-- Chapter 9: Resources -->
+<h2 id="resources">9. Resources</h2>
+
+<h3>Documentation</h3>
+<ul style="margin-left: 20px; margin-bottom: 16px;">
+  <li><a href="https://ai.google.dev/docs">Gemini API Documentation</a></li>
+  <li><a href="https://mujoco.readthedocs.io/">MuJoCo Documentation</a></li>
+  <li><a href="https://threejs.org/docs/">Three.js Documentation</a></li>
+  <li><a href="https://github.com/google-deepmind/mujoco_menagerie">MuJoCo Menagerie (Robot Models)</a></li>
+</ul>
+
+<h3>Concepts</h3>
+<ul style="margin-left: 20px; margin-bottom: 16px;">
+  <li><a href="https://en.wikipedia.org/wiki/Inverse_kinematics">Inverse Kinematics (Wikipedia)</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Denavit%E2%80%93Hartenberg_parameters">DH Parameters (Wikipedia)</a></li>
+  <li><a href="https://threejs.org/docs/#api/en/core/Raycaster">Three.js Raycaster</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Finite-state_machine">Finite State Machine (Wikipedia)</a></li>
+</ul>
+
+<h3>Related Projects</h3>
+<ul style="margin-left: 20px;">
+  <li><a href="https://github.com/google-deepmind/mujoco">MuJoCo (Google DeepMind)</a></li>
+  <li><a href="https://github.com/frankaemika">Franka Emika (Official)</a></li>
+</ul>
+
+</div>
+</body>
+</html>

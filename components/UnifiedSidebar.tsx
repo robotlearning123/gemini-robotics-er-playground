@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 
-import { BoxSelect, ChevronDown, FastForward, Grab, History, Info, Loader2, MousePointer2, RotateCcw, Scan, Send, Settings2, Thermometer, X } from 'lucide-react';
+import { BoxSelect, ChevronDown, FastForward, Grab, History, Info, Key, Loader2, MousePointer2, RotateCcw, Scan, Send, Settings2, Thermometer, X } from 'lucide-react';
 import { useState } from 'react';
 import { LogOverlay } from '../App';
 import { DetectedItem, DetectType, LogEntry } from '../types';
@@ -20,6 +20,8 @@ interface UnifiedSidebarProps {
   isDarkMode: boolean;
   isPickingUp?: boolean;
   playbackSpeed?: number;
+  userApiKey?: string;
+  onApiKeyChange?: (key: string) => void;
 }
 
 /**
@@ -37,7 +39,9 @@ export function UnifiedSidebar({
   onOpenLog, 
   isDarkMode,
   isPickingUp = false,
-  playbackSpeed = 1
+  playbackSpeed = 1,
+  userApiKey = '',
+  onApiKeyChange
 }: UnifiedSidebarProps) {
   const [prompt, setPrompt] = useState('red cubes');
   const [type, setType] = useState<DetectType>('Segmentation masks');
@@ -152,37 +156,60 @@ export function UnifiedSidebar({
 
           {/* Configuration Controls */}
           {showSettings && (
-            <div className={`flex items-center justify-between gap-4 px-1 py-1 animate-in slide-in-from-top-2 fade-in duration-200 ${isDarkMode ? 'bg-slate-800/20 rounded-xl' : 'bg-slate-50/50 rounded-xl'}`}>
-               <div className="flex-1 flex flex-col gap-1.5 p-2">
-                  <div className="flex justify-between items-end">
-                     <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-                        <Thermometer className="w-3 h-3" />
-                        <span>Temp</span>
-                     </div>
-                     <span className={`text-[10px] font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{temperature}</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="2" 
-                    step="0.1" 
-                    value={temperature}
-                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:bg-slate-700"
+            <div className={`flex flex-col gap-2 px-1 py-1 animate-in slide-in-from-top-2 fade-in duration-200 ${isDarkMode ? 'bg-slate-800/20 rounded-xl' : 'bg-slate-50/50 rounded-xl'}`}>
+               {/* API Key Input */}
+               <div className="flex items-center gap-2 p-2">
+                  <Key className={`w-3 h-3 shrink-0 ${userApiKey ? 'text-emerald-500' : (isDarkMode ? 'text-slate-500' : 'text-slate-400')}`} />
+                  <input
+                    type="password"
+                    value={userApiKey}
+                    onChange={(e) => onApiKeyChange?.(e.target.value)}
+                    placeholder="Gemini API Key (optional)"
+                    className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500/30 border transition-colors ${inputBg}`}
                   />
+                  {userApiKey && (
+                    <button onClick={() => onApiKeyChange?.('')} className="text-slate-400 hover:text-slate-600 transition-colors" title="Clear key">
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                </div>
+               {!userApiKey && !process.env.API_KEY && (
+                 <p className={`text-[9px] px-2 pb-1 ${isDarkMode ? 'text-amber-400/70' : 'text-amber-600/70'}`}>
+                   Enter your <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline">Gemini API key</a> to get started
+                 </p>
+               )}
+               <div className="flex items-center justify-between gap-4">
+                 <div className="flex-1 flex flex-col gap-1.5 p-2">
+                    <div className="flex justify-between items-end">
+                       <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                          <Thermometer className="w-3 h-3" />
+                          <span>Temp</span>
+                       </div>
+                       <span className={`text-[10px] font-mono font-bold ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{temperature}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="2"
+                      step="0.1"
+                      value={temperature}
+                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                      className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 dark:bg-slate-700"
+                    />
+                 </div>
 
-               <div className="flex items-center gap-2 pt-4 p-2" title="Thinking improves the capabilities of the model to reason through tasks, but may produce less desirable results for simple locating tasks. For simple tasks, disable thinking for improved speed and likely better results.">
-                   <input 
-                     type="checkbox" 
-                     id="thinking-toggle"
-                     checked={enableThinking}
-                     onChange={(e) => setEnableThinking(e.target.checked)}
-                     className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                   />
-                   <label htmlFor="thinking-toggle" className={`text-[9px] font-bold uppercase tracking-widest cursor-pointer select-none ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>
-                      Thinking
-                   </label>
+                 <div className="flex items-center gap-2 pt-4 p-2" title="Thinking improves the capabilities of the model to reason through tasks, but may produce less desirable results for simple locating tasks. For simple tasks, disable thinking for improved speed and likely better results.">
+                     <input
+                       type="checkbox"
+                       id="thinking-toggle"
+                       checked={enableThinking}
+                       onChange={(e) => setEnableThinking(e.target.checked)}
+                       className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                     />
+                     <label htmlFor="thinking-toggle" className={`text-[9px] font-bold uppercase tracking-widest cursor-pointer select-none ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>
+                        Thinking
+                     </label>
+                 </div>
                </div>
             </div>
           )}

@@ -101,12 +101,21 @@ export function App() {
   const [erLoading, setErLoading] = useState(false);
   const [logs, setLogs] = useState<Array<LogEntry>>([]);
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
-  const [flash, setFlash] = useState(false); 
-  const detectedTargets = useRef<Array<{pos: THREE.Vector3, markerId: number}>>([]); 
-  const [detectedCount, setDetectedCount] = useState(0); 
-  
+  const [flash, setFlash] = useState(false);
+  const detectedTargets = useRef<Array<{pos: THREE.Vector3, markerId: number}>>([]);
+  const [detectedCount, setDetectedCount] = useState(0);
+
   const [isPickingUp, setIsPickingUp] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  // User API key (stored in localStorage for persistence)
+  const [userApiKey, setUserApiKey] = useState(() => {
+    try { return localStorage.getItem('gemini_api_key') || ''; } catch { return ''; }
+  });
+  const handleApiKeyChange = (key: string) => {
+    setUserApiKey(key);
+    try { localStorage.setItem('gemini_api_key', key); } catch { /* ignore */ }
+  };
 
   const [gizmoStats, setGizmoStats] = useState<{pos: string, rot: string} | null>(null);
 
@@ -298,20 +307,42 @@ export function App() {
       await simRef.current.renderSys.moveCameraTo(savedState.position, savedState.target, 1500);
 
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-          const response = await ai.models.generateContent({
-              model: modelId,
-              contents: {
-                  parts: [
-                      { inlineData: { mimeType: 'image/png', data: base64Data } },
-                      { text: textPrompt }
-                  ]
-              },
-              // tslint:disable-next-line:no-any
-              config: config
-          });
+          // Determine which API key to use: user-provided key takes priority
+          const effectiveKey = userApiKey.trim() || process.env.API_KEY;
+          let text: string | undefined;
 
-          const text = response.text;
+          if (effectiveKey) {
+              // Direct client-side call (user's own key or env key)
+              const ai = new GoogleGenAI({ apiKey: effectiveKey });
+              const response = await ai.models.generateContent({
+                  model: modelId,
+                  contents: {
+                      parts: [
+                          { inlineData: { mimeType: 'image/png', data: base64Data } },
+                          { text: textPrompt }
+                      ]
+                  },
+                  // tslint:disable-next-line:no-any
+                  config: config
+              });
+              text = response.text;
+          } else {
+              // Server-side proxy (API key stays on server)
+              const proxyRes = await fetch('/api/detect', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                      image: base64Data,
+                      prompt: textPrompt,
+                      model: modelId,
+                      config: config
+                  })
+              });
+              const proxyData = await proxyRes.json();
+              if (!proxyRes.ok) throw new Error(proxyData.error || `Server error ${proxyRes.status}`);
+              text = proxyData.text;
+          }
+
           if (!text) throw new Error("No response text returned.");
 
           let jsonText = text.replace(/```json|```/g, '').trim();
@@ -482,7 +513,7 @@ export function App() {
             toggleDarkMode={toggleDarkMode}
           />
           
-          <UnifiedSidebar 
+          <UnifiedSidebar
             isOpen={showSidebar}
             onClose={() => setShowSidebar(false)}
             onSend={handleErSend}
@@ -494,6 +525,8 @@ export function App() {
             isDarkMode={isDarkMode}
             isPickingUp={isPickingUp}
             playbackSpeed={playbackSpeed}
+            userApiKey={userApiKey}
+            onApiKeyChange={handleApiKeyChange}
           />
 
           {/* Expanded View Modal - Overlay everything */}
