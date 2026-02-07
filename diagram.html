@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Franka Pick & Place - System Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: #0a0e1a; color: #e2e8f0; overflow-x: hidden; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+  h1 { text-align: center; font-size: 32px; color: #f8fafc; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 40px; }
+  .section-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+    color: #6366f1; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, #6366f1 0%, transparent 100%); }
+
+  /* Section 1: Architecture */
+  .arch-overview {
+    display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: center;
+    margin-bottom: 48px;
+  }
+  .arch-box {
+    background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 16px;
+    padding: 24px 20px; border: 1px solid #334155; text-align: center;
+  }
+  .arch-box .emoji { font-size: 36px; margin-bottom: 10px; }
+  .arch-box .title { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+  .arch-box .tech { font-size: 11px; color: #6366f1; font-weight: 600; margin-bottom: 8px; }
+  .arch-box .desc { font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  .arch-box.user { border-color: #22d3ee; }
+  .arch-box.ai { border-color: #a78bfa; }
+  .arch-box.robot { border-color: #34d399; }
+  .arch-arrow { text-align: center; font-size: 28px; color: #475569; }
+
+  /* Section 2: Data Flow */
+  .flow-container { margin-bottom: 48px; }
+  .flow-timeline { position: relative; padding: 0 0 0 40px; }
+  .flow-timeline::before {
+    content: ''; position: absolute; left: 18px; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, #6366f1, #22d3ee, #a78bfa, #34d399, #f59e0b, #ef4444);
+    border-radius: 3px;
+  }
+  .flow-item {
+    position: relative; margin-bottom: 16px; display: grid;
+    grid-template-columns: 220px 1fr; gap: 16px; align-items: start;
+  }
+  .flow-item::before {
+    content: attr(data-step); position: absolute; left: -40px; top: 4px;
+    width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700; color: white; z-index: 1;
+  }
+  .flow-item:nth-child(1)::before { background: #6366f1; }
+  .flow-item:nth-child(2)::before { background: #22d3ee; }
+  .flow-item:nth-child(3)::before { background: #a78bfa; }
+  .flow-item:nth-child(4)::before { background: #34d399; }
+  .flow-item:nth-child(5)::before { background: #f59e0b; }
+  .flow-item:nth-child(6)::before { background: #ef4444; }
+  .flow-label {
+    background: #1e293b; border-radius: 10px; padding: 12px 16px; border: 1px solid #334155;
+  }
+  .flow-label .name { font-weight: 700; font-size: 14px; color: #f1f5f9; }
+  .flow-label .file { font-size: 11px; color: #6366f1; font-family: 'SF Mono', monospace; margin-top: 2px; }
+  .flow-detail {
+    background: #0f172a; border-radius: 10px; padding: 12px 16px;
+    border: 1px solid #1e293b; font-size: 12px; color: #94a3b8; line-height: 1.6;
+  }
+  .flow-detail code {
+    background: #1e293b; padding: 1px 6px; border-radius: 4px; font-size: 11px;
+    color: #22d3ee; font-family: 'SF Mono', monospace;
+  }
+
+  /* Section 3: Detection Modes */
+  .modes-section { margin-bottom: 48px; }
+  .modes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .mode-card {
+    background: #1e293b; border-radius: 14px; padding: 20px; border: 1px solid #334155; text-align: center;
+  }
+  .mode-card .icon { font-size: 32px; margin-bottom: 8px; }
+  .mode-card .name { font-size: 16px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .mode-card .en { font-size: 11px; color: #6366f1; margin-bottom: 10px; }
+  .mode-card .desc { font-size: 12px; color: #94a3b8; line-height: 1.6; text-align: left; }
+  .mode-card .output {
+    margin-top: 10px; background: #0f172a; border-radius: 8px; padding: 8px;
+    font-family: 'SF Mono', monospace; font-size: 10px; color: #64748b; text-align: left;
+  }
+  .mode-card.boxes { border-top: 3px solid #22d3ee; }
+  .mode-card.masks { border-top: 3px solid #a78bfa; }
+  .mode-card.points { border-top: 3px solid #34d399; }
+
+  /* Section 4: State Machine */
+  .sm-container { margin-bottom: 48px; }
+  .sm-flow { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 10px 0; }
+  .sm-state {
+    min-width: 130px; border-radius: 12px; padding: 16px; text-align: center;
+    border: 2px solid; flex-shrink: 0;
+  }
+  .sm-state .phase { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .sm-state .sub { font-size: 12px; margin-bottom: 6px; font-weight: 600; }
+  .sm-state .detail { font-size: 10px; line-height: 1.5; opacity: 0.7; }
+  .sm-state.hover { background: #1e1b4b; border-color: #6366f1; color: #c7d2fe; }
+  .sm-state.open { background: #164e63; border-color: #06b6d4; color: #a5f3fc; }
+  .sm-state.lower { background: #451a03; border-color: #f59e0b; color: #fde68a; }
+  .sm-state.grasp { background: #14532d; border-color: #22c55e; color: #bbf7d0; }
+  .sm-state.lift { background: #3b0764; border-color: #a855f7; color: #e9d5ff; }
+  .sm-state.move { background: #1e3a5f; border-color: #3b82f6; color: #bfdbfe; }
+  .sm-state.drop { background: #450a0a; border-color: #ef4444; color: #fecaca; }
+  .sm-arrow { display: flex; align-items: center; color: #475569; font-size: 20px; flex-shrink: 0; }
+
+  /* Section 5: IK Solver */
+  .ik-section { margin-bottom: 48px; }
+  .ik-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ik-card {
+    background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 14px;
+    padding: 20px; border: 1px solid #334155;
+  }
+  .ik-card h4 { font-size: 14px; color: #f1f5f9; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .ik-card h4 .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .ik-card p { font-size: 12px; color: #94a3b8; line-height: 1.6; margin-bottom: 8px; }
+  .ik-card .formula {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+    padding: 10px 14px; font-family: 'SF Mono', monospace; font-size: 12px; color: #a78bfa; text-align: center;
+  }
+  .joint-list { list-style: none; }
+  .joint-list li {
+    padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 12px;
+    display: flex; justify-content: space-between; color: #94a3b8;
+  }
+  .joint-list li:last-child { border: none; }
+  .joint-list .jname { color: #e2e8f0; font-weight: 600; }
+  .joint-list .jrange { color: #6366f1; font-family: 'SF Mono', monospace; font-size: 11px; }
+
+  /* Section 6: File Dependencies */
+  .dep-graph { margin-bottom: 48px; }
+  .dep-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dep-card {
+    background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155;
+    transition: border-color 0.2s;
+  }
+  .dep-card:hover { border-color: #6366f1; }
+  .dep-card .fname { font-size: 13px; font-weight: 700; color: #e2e8f0; font-family: 'SF Mono', monospace; margin-bottom: 4px; }
+  .dep-card .lines { font-size: 10px; color: #475569; margin-bottom: 6px; }
+  .dep-card .role { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+  .dep-card .deps { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .dep-tag {
+    font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600;
+    background: #0f172a; color: #64748b; border: 1px solid #1e293b;
+  }
+  .dep-tag.imports { color: #22d3ee; border-color: #164e63; }
+  .dep-tag.exports { color: #a78bfa; border-color: #3b0764; }
+  .dep-card.ui { border-left: 3px solid #6366f1; }
+  .dep-card.render { border-left: 3px solid #22d3ee; }
+  .dep-card.physics { border-left: 3px solid #34d399; }
+  .dep-card.control { border-left: 3px solid #f59e0b; }
+
+  /* Footer */
+  .tech-footer {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    padding: 24px 0; border-top: 1px solid #1e293b;
+  }
+  .tech-pill {
+    padding: 8px 16px; border-radius: 24px; font-size: 12px; font-weight: 600;
+    border: 1px solid #334155; color: #94a3b8; background: #1e293b;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tech-pill .ver { color: #6366f1; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Franka Panda Pick & Place</h1>
+<p class="subtitle">Full System Architecture | Gemini Embodied Reasoning + MuJoCo WASM + Three.js</p>
+
+<!-- 1. Three Pillars -->
+<div class="section-title">1. Three-Pillar Architecture</div>
+<div class="arch-overview">
+  <div class="arch-box user">
+    <div class="emoji">👤</div>
+    <div class="title">User Interface</div>
+    <div class="tech">React 19 + Three.js</div>
+    <div class="desc">3D scene rendering<br>Control panel UI<br>Canvas snapshot capture</div>
+  </div>
+  <div class="arch-arrow">⇄</div>
+  <div class="arch-box ai">
+    <div class="emoji">🧠</div>
+    <div class="title">AI Reasoning</div>
+    <div class="tech">Gemini Robotics ER 1.5</div>
+    <div class="desc">Visual scene understanding<br>Object detection<br>2D coordinate localization</div>
+  </div>
+  <div class="arch-arrow">⇄</div>
+  <div class="arch-box robot">
+    <div class="emoji">🤖</div>
+    <div class="title">Robot Control</div>
+    <div class="tech">MuJoCo WASM + IK Solver</div>
+    <div class="desc">Physics simulation engine<br>Inverse kinematics solving<br>Pick-and-place state machine</div>
+  </div>
+</div>
+
+<!-- 2. Data Flow -->
+<div class="flow-container">
+<div class="section-title">2. Data Flow Pipeline</div>
+<div class="flow-timeline">
+  <div class="flow-item" data-step="1">
+    <div class="flow-label">
+      <div class="name">User Prompt Input</div>
+      <div class="file">UnifiedSidebar.tsx</div>
+    </div>
+    <div class="flow-detail">
+      User enters a target description (e.g. <code>"red cubes"</code>) in the sidebar, selects a detection mode (BOXES / MASKS / POINTS), adjusts temperature and Thinking toggle, then clicks Detect.
+    </div>
+  </div>
+  <div class="flow-item" data-step="2">
+    <div class="flow-label">
+      <div class="name">Canvas Snapshot</div>
+      <div class="file">RenderSystem.ts &rarr; getCanvasSnapshot()</div>
+    </div>
+    <div class="flow-detail">
+      Captures a <code>Base64 JPEG</code> screenshot from the Three.js renderer at the current camera angle. This image contains the full scene (robot, cubes, table) and serves as input to Gemini.
+    </div>
+  </div>
+  <div class="flow-item" data-step="3">
+    <div class="flow-label">
+      <div class="name">Gemini API Inference</div>
+      <div class="file">App.tsx &rarr; handleErSend()</div>
+    </div>
+    <div class="flow-detail">
+      Sends the screenshot + prompt to <code>gemini-robotics-er-1.5-preview</code>. The model returns a JSON array of detected objects with 2D coordinates (bounding box / point / mask).
+    </div>
+  </div>
+  <div class="flow-item" data-step="4">
+    <div class="flow-label">
+      <div class="name">2D &rarr; 3D Projection</div>
+      <div class="file">RenderSystem.ts &rarr; project2DTo3D()</div>
+    </div>
+    <div class="flow-detail">
+      Takes the center <code>(x, y)</code> of each 2D detection box, casts a ray from the camera through that pixel into the 3D scene (raycasting). The intersection with the table/object becomes the 3D world coordinate.
+    </div>
+  </div>
+  <div class="flow-item" data-step="5">
+    <div class="flow-label">
+      <div class="name">IK Solving</div>
+      <div class="file">FrankaAnalyticalIK.ts</div>
+    </div>
+    <div class="flow-detail">
+      Given the target end-effector pose, analytically computes all 7 joint angles for the Franka arm. The 7-DOF redundancy is resolved by selecting the solution closest to the current configuration via <code>redundancy resolution</code>.
+    </div>
+  </div>
+  <div class="flow-item" data-step="6">
+    <div class="flow-label">
+      <div class="name">Execute Pick Sequence</div>
+      <div class="file">SequenceAnimator.ts</div>
+    </div>
+    <div class="flow-detail">
+      A state machine drives the arm through Hover &rarr; Open &rarr; Lower &rarr; Grasp &rarr; Lift &rarr; Move &rarr; Drop. Joint angles are interpolated for smooth motion while the physics engine simulates collisions in real time.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- 3. Detection Modes -->
+<div class="modes-section">
+<div class="section-title">3. Detection Modes</div>
+<div class="modes-grid">
+  <div class="mode-card boxes">
+    <div class="icon">📦</div>
+    <div class="name">Bounding Boxes</div>
+    <div class="en">Rectangular regions</div>
+    <div class="desc">Returns a rectangular bounding box per object, defined by 4 coordinates (top-left and bottom-right corners). Best for fast localization.</div>
+    <div class="output">{"box_2d": [y1, x1, y2, x2],<br> "label": "red cube"}</div>
+  </div>
+  <div class="mode-card masks">
+    <div class="icon">🎭</div>
+    <div class="name">Segmentation Masks</div>
+    <div class="en">Pixel-level outlines</div>
+    <div class="desc">Returns pixel-level object contour masks for precise boundary delineation. Only supported by the ER 1.5 model (not Gemini 3 Flash).</div>
+    <div class="output">{"box_2d": [...],<br> "mask": "base64...",<br> "label": "red cube"}</div>
+  </div>
+  <div class="mode-card points">
+    <div class="icon">📍</div>
+    <div class="name">Points</div>
+    <div class="en">Exact interaction coordinates</div>
+    <div class="desc">Returns the precise center coordinate of each object. Ideal for pinpoint interaction positioning in dense scenes.</div>
+    <div class="output">{"point": [y, x],<br> "label": "red cube"}</div>
+  </div>
+</div>
+</div>
+
+<!-- 4. State Machine -->
+<div class="sm-container">
+<div class="section-title">4. Pick-and-Place State Machine (SequenceAnimator)</div>
+<div class="sm-flow">
+  <div class="sm-state hover">
+    <div class="phase">HOVER</div>
+    <div class="sub">Approach</div>
+    <div class="detail">Move above target<br>at 15cm clearance</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state open">
+    <div class="phase">OPEN</div>
+    <div class="sub">Prepare</div>
+    <div class="detail">Open parallel<br>gripper to max</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state lower">
+    <div class="phase">LOWER</div>
+    <div class="sub">Descend</div>
+    <div class="detail">Descend along Z<br>to object height</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state grasp">
+    <div class="phase">GRASP</div>
+    <div class="sub">Grip</div>
+    <div class="detail">Close gripper<br>apply clamping force</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state lift">
+    <div class="phase">LIFT</div>
+    <div class="sub">Raise</div>
+    <div class="detail">Lift object to<br>safe height</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state move">
+    <div class="phase">MOVE</div>
+    <div class="sub">Transport</div>
+    <div class="detail">Translate to<br>drop-off tray</div>
+  </div>
+  <div class="sm-arrow">→</div>
+  <div class="sm-state drop">
+    <div class="phase">DROP</div>
+    <div class="sub">Release</div>
+    <div class="detail">Open gripper<br>object falls in tray</div>
+  </div>
+</div>
+</div>
+
+<!-- 5. IK Solver -->
+<div class="ik-section">
+<div class="section-title">5. Inverse Kinematics</div>
+<div class="ik-grid">
+  <div class="ik-card">
+    <h4><span class="dot" style="background:#f59e0b"></span> Franka Panda 7-DOF Arm</h4>
+    <p>The Franka Emika Panda has 7 revolute joints (one more than minimum 6-DOF), providing kinematic redundancy for obstacle avoidance while reaching target poses.</p>
+    <ul class="joint-list">
+      <li><span class="jname">Joint 1</span> <span class="jrange">-2.90 ~ 2.90 rad</span></li>
+      <li><span class="jname">Joint 2</span> <span class="jrange">-1.76 ~ 1.76 rad</span></li>
+      <li><span class="jname">Joint 3</span> <span class="jrange">-2.90 ~ 2.90 rad</span></li>
+      <li><span class="jname">Joint 4</span> <span class="jrange">-3.07 ~ -0.07 rad</span></li>
+      <li><span class="jname">Joint 5</span> <span class="jrange">-2.90 ~ 2.90 rad</span></li>
+      <li><span class="jname">Joint 6</span> <span class="jrange">-0.02 ~ 3.75 rad</span></li>
+      <li><span class="jname">Joint 7</span> <span class="jrange">-2.90 ~ 2.90 rad</span></li>
+    </ul>
+  </div>
+  <div class="ik-card">
+    <h4><span class="dot" style="background:#a78bfa"></span> Analytical IK Solving Process</h4>
+    <p>Unlike iterative numerical methods (e.g. Jacobian pseudoinverse), this project uses an <strong>analytical closed-form</strong> solver for faster and more precise joint angle computation.</p>
+    <div class="formula">T_target = T_0&rarr;1 &times; T_1&rarr;2 &times; ... &times; T_6&rarr;7</div>
+    <p style="margin-top:10px;">Solving steps:</p>
+    <p>1. Given target end-effector pose (position + orientation)</p>
+    <p>2. Use Panda kinematic parameters (DH parameters)</p>
+    <p>3. Decompose 7-DOF into solvable sub-problems</p>
+    <p>4. Select solution closest to current configuration</p>
+    <p>5. Validate against joint limit constraints</p>
+  </div>
+</div>
+</div>
+
+<!-- 6. File Dependencies -->
+<div class="dep-graph">
+<div class="section-title">6. File Dependency Map</div>
+<div class="dep-grid">
+  <div class="dep-card ui">
+    <div class="fname">App.tsx</div>
+    <div class="lines">~650 lines | Main Controller</div>
+    <div class="role">Orchestrates the full AI loop: snapshot &rarr; inference &rarr; projection &rarr; pickup</div>
+    <div class="deps">
+      <span class="dep-tag imports">MujocoSim</span>
+      <span class="dep-tag imports">GoogleGenAI</span>
+      <span class="dep-tag imports">3 UI components</span>
+    </div>
+  </div>
+  <div class="dep-card physics">
+    <div class="fname">MujocoSim.ts</div>
+    <div class="lines">~360 lines | Simulation Core</div>
+    <div class="role">Physics engine loop: load model, step simulation, sync rendering</div>
+    <div class="deps">
+      <span class="dep-tag imports">RenderSystem</span>
+      <span class="dep-tag imports">IkSystem</span>
+      <span class="dep-tag imports">SequenceAnimator</span>
+      <span class="dep-tag imports">RobotLoader</span>
+    </div>
+  </div>
+  <div class="dep-card render">
+    <div class="fname">RenderSystem.ts</div>
+    <div class="lines">~400 lines | Render Engine</div>
+    <div class="role">Three.js scene, camera, lighting, 2D&rarr;3D projection</div>
+    <div class="deps">
+      <span class="dep-tag imports">GeomBuilder</span>
+      <span class="dep-tag imports">Reflector</span>
+      <span class="dep-tag exports">project2DTo3D</span>
+    </div>
+  </div>
+  <div class="dep-card control">
+    <div class="fname">SequenceAnimator.ts</div>
+    <div class="lines">~420 lines | Pick Controller</div>
+    <div class="role">7-phase state machine, joint interpolation, gripper control</div>
+    <div class="deps">
+      <span class="dep-tag imports">IkSystem</span>
+      <span class="dep-tag imports">FrankaAnalyticalIK</span>
+    </div>
+  </div>
+  <div class="dep-card control">
+    <div class="fname">FrankaAnalyticalIK.ts</div>
+    <div class="lines">~280 lines | IK Solver</div>
+    <div class="role">Analytical 7-DOF joint angle computation with redundancy resolution</div>
+    <div class="deps">
+      <span class="dep-tag imports">MatMath</span>
+    </div>
+  </div>
+  <div class="dep-card control">
+    <div class="fname">IkSystem.ts</div>
+    <div class="lines">~200 lines | IK Manager</div>
+    <div class="role">Manages IK targets, invokes solver, handles collision</div>
+    <div class="deps">
+      <span class="dep-tag imports">FrankaAnalyticalIK</span>
+    </div>
+  </div>
+  <div class="dep-card render">
+    <div class="fname">GeomBuilder.ts</div>
+    <div class="lines">~150 lines | Geometry Factory</div>
+    <div class="role">Converts MuJoCo collision shapes to Three.js meshes</div>
+    <div class="deps">
+      <span class="dep-tag imports">CapsuleGeometry</span>
+    </div>
+  </div>
+  <div class="dep-card physics">
+    <div class="fname">RobotLoader.ts</div>
+    <div class="lines">~130 lines | Model Loader</div>
+    <div class="role">Downloads MJCF + mesh assets from DeepMind Menagerie</div>
+    <div class="deps">
+      <span class="dep-tag imports">MuJoCo FS</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Footer -->
+<div class="tech-footer">
+  <span class="tech-pill">React <span class="ver">19</span></span>
+  <span class="tech-pill">TypeScript <span class="ver">5.8</span></span>
+  <span class="tech-pill">Three.js <span class="ver">0.181</span></span>
+  <span class="tech-pill">MuJoCo <span class="ver">WASM</span></span>
+  <span class="tech-pill">Gemini <span class="ver">ER 1.5</span></span>
+  <span class="tech-pill">Vite <span class="ver">6</span></span>
+  <span class="tech-pill">Franka Panda <span class="ver">7-DOF</span></span>
+</div>
+
+</div>
+</body>
+</html>
